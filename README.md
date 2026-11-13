@@ -2,15 +2,14 @@
 
 Prototype for the Software Project Management semester project, Zhengzhou University.
 
-Developer: MD Tariq Uz Zaman
 
 ## Team
 
 | Member | Role | Responsibilities |
 | --- | --- | --- |
-| MD Eaftekhirul Islam ([@eafte](https://github.com/eafte)) | Project Manager | Schedule, WBS, weekly meetings, progress and risks |
-| MD Tariq Uz Zaman ([@TARIQ8099](https://github.com/TARIQ8099)) | Business Analyst and Developer | Requirements and the code of this app |
-| MD Abir Ahmmed | Design and Documentation Lead | UML diagrams, mock-ups, report and slides |
+| MD Eaftekhirul Islam [![GitHub](https://shields.io)](https://github.com/eafte) | Project Manager | Schedule, WBS, weekly meetings, progress and risks |
+| MD Tariq Uz Zaman [![GitHub](https://shields.io)](https://github.com/TARIQ8099) | Business Analyst and Developer | Requirements and the code of this app |
+| MD Abir Ahmmed [![GitHub](https://shields.io)](https://github.com/devbyabir) | Design and Documentation Lead | UML diagrams, mock-ups, report and slides |
 
 ## What it does
 
@@ -77,6 +76,5 @@ All sample accounts use the password `demo1234`.
 ## Tools
 
 Python, Flask and SQLite. Fonts: Lexend and Source Sans 3 (SIL Open Font License). Icons: Phosphor Icons
-(MIT License). The fonts and icons are stored in the project, so the app also works without internet.
+[MIT License](LICENSE). The fonts and icons are stored in the project, so the app also works without internet.
 All tools are free and open source, so the project costs 0 yuan.
-# International_Student_Request_and_Deadline_Tracker
