@@ -79,3 +79,4 @@ All sample accounts use the password `demo1234`.
 Python, Flask and SQLite. Fonts: Lexend and Source Sans 3 (SIL Open Font License). Icons: Phosphor Icons
 (MIT License). The fonts and icons are stored in the project, so the app also works without internet.
 All tools are free and open source, so the project costs 0 yuan.
+# International_Student_Request_and_Deadline_Tracker
