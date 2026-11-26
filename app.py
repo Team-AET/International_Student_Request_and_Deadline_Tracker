@@ -19,6 +19,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 BASE_DIR = Path(__file__).resolve().parent
 REQUEST_TYPES = ["Residence permit renewal", "Study certificate", "Leave or travel approval"]
 STATUSES = ["Submitted", "In review", "Approved", "Rejected", "Ready for pickup"]
+# A request moves forward one step at a time; Rejected and Ready for pickup are final.
+# Saving a comment without changing the status is always allowed.
+NEXT_STATUSES = {"Submitted": ["In review"], "In review": ["Approved", "Rejected"],
+                 "Approved": ["Ready for pickup"], "Rejected": [], "Ready for pickup": []}
 STATUS_ICONS = {"Submitted": "paper-plane-tilt", "In review": "hourglass-medium", "Approved": "check-circle",
                 "Rejected": "x-circle", "Ready for pickup": "package"}
 STUDENT_GROUPS = {"current": "u.graduated_on IS NULL", "graduated": "u.graduated_on IS NOT NULL", "all": "1 = 1"}
@@ -424,8 +428,13 @@ def manage_request(request_id):
     if request.method == "POST":
         status = request.form.get("status")
         comment = request.form.get("staff_comment", "").strip()
+        current = row["status"]
         if status not in STATUSES or len(comment) > MAX_TEXT:
             flash(f"Please choose a valid status and keep the comment under {MAX_TEXT} characters.", "error")
+        elif status != current and status not in NEXT_STATUSES[current]:
+            flash(f"A request that is {current} cannot be changed to {status}.", "error")
+        elif status == "Rejected" and not comment:
+            flash("Please write the reason for rejecting this request in the comment.", "error")
         else:
             db.execute(
                 "UPDATE requests SET status = ?, staff_comment = ?, updated_at = ? WHERE id = ?",
@@ -434,7 +443,8 @@ def manage_request(request_id):
             db.commit()
             flash(f"Request #{request_id} updated.", "success")
             return redirect(url_for("staff_dashboard"))
-    return render_template("manage_request.html", r=row, statuses=STATUSES)
+    choices = [row["status"]] + NEXT_STATUSES[row["status"]]  # the current status, then the allowed next steps
+    return render_template("manage_request.html", r=row, statuses=choices)
 
 
 if __name__ == "__main__":

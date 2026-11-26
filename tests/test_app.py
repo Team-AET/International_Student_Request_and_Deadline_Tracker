@@ -194,3 +194,51 @@ def test_old_database_gets_the_graduated_column(tmp_path):
         tracker.upgrade_db()
         columns = {row["name"] for row in tracker.get_db().execute("PRAGMA table_info(users)")}
     assert "graduated_on" in columns
+
+
+def staff_update(client, request_id, status, comment=""):
+    data = {"status": status, "staff_comment": comment,
+            "csrf_token": csrf_token(client, f"/staff/requests/{request_id}")}
+    return client.post(f"/staff/requests/{request_id}", data=data, follow_redirects=True).get_data(as_text=True)
+
+
+def test_request_moves_forward_one_step_at_a_time(client):
+    login(client, "staff")                                   # request 3 starts as Submitted
+    assert "cannot be changed to Approved" in staff_update(client, 3, "Approved")
+    assert request_row(3)["status"] == "Submitted"
+    staff_update(client, 3, "In review")
+    staff_update(client, 3, "Approved", "Collect on Friday.")
+    staff_update(client, 3, "Ready for pickup")
+    assert request_row(3)["status"] == "Ready for pickup"
+
+
+def test_rejecting_needs_a_reason(client):
+    login(client, "staff")                                   # request 1 is In review
+    assert "reason for rejecting" in staff_update(client, 1, "Rejected", "")
+    assert request_row(1)["status"] == "In review"
+    staff_update(client, 1, "Rejected", "Passport page is missing.")
+    row = request_row(1)
+    assert (row["status"], row["staff_comment"]) == ("Rejected", "Passport page is missing.")
+
+
+def test_final_statuses_cannot_be_changed_but_comments_can(client):
+    login(client, "staff")                                   # 4 is Rejected, 2 is Ready for pickup
+    assert "cannot be changed" in staff_update(client, 4, "Approved")
+    assert "cannot be changed" in staff_update(client, 2, "In review")
+    assert request_row(4)["status"] == "Rejected" and request_row(2)["status"] == "Ready for pickup"
+    staff_update(client, 2, "Ready for pickup", "Office is closed on Monday.")
+    assert request_row(2)["staff_comment"] == "Office is closed on Monday."
+
+
+def test_comment_only_update_keeps_the_status(client):
+    login(client, "staff")
+    staff_update(client, 3, "Submitted", "Please send your travel dates.")
+    row = request_row(3)
+    assert (row["status"], row["staff_comment"]) == ("Submitted", "Please send your travel dates.")
+
+
+def test_staff_form_offers_only_allowed_statuses(client):
+    login(client, "staff")                                   # request 3 is Submitted
+    form = client.get("/staff/requests/3").get_data(as_text=True).split('id="status"')[1].split("</select>")[0]
+    assert "In review" in form and "Submitted" in form
+    assert "Approved" not in form and "Ready for pickup" not in form
