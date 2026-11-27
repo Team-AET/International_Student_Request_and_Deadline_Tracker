@@ -34,7 +34,7 @@
     <label for="staff_comment">Comment for the student</label>
     <textarea id="staff_comment" name="staff_comment" rows="4" maxlength="500"
               aria-describedby="comment-help">{{ r.staff_comment }}</textarea>
-    <p id="comment-help" class="help">The student sees this comment next to the request.</p>
+    <p id="comment-help" class="help">The student sees this comment next to the request. A reason is required when you reject.</p>
     <div class="actions">
       <button class="btn" type="submit">{{ icon('check-circle') }}<span>Save changes</span></button>
       <a class="btn btn-secondary" href="{{ url_for('staff_dashboard') }}">Cancel</a>
