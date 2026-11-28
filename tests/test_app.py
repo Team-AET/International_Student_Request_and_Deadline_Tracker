@@ -242,3 +242,58 @@ def test_staff_form_offers_only_allowed_statuses(client):
     form = client.get("/staff/requests/3").get_data(as_text=True).split('id="status"')[1].split("</select>")[0]
     assert "In review" in form and "Submitted" in form
     assert "Approved" not in form and "Ready for pickup" not in form
+
+
+def submit_request(client, username, req_type, note):
+    login(client, username)
+    data = {"type": req_type, "note": note, "csrf_token": csrf_token(client, "/student/requests/new")}
+    client.post("/student/requests/new", data=data)
+    user_id = student_id(username)
+    with tracker.app.app_context():
+        return tracker.get_db().execute(
+            "SELECT id FROM requests WHERE student_id = ? ORDER BY id DESC LIMIT 1", (user_id,)
+        ).fetchone()["id"]
+
+
+def test_fr3_ac2_request_detail_shows_status_staff_comment_and_timestamps(client):
+    request_id = submit_request(client, "carlos", "Study certificate", "For my bank account")
+    client.get("/logout")
+    login(client, "staff")
+    staff_update(client, request_id, "In review", "Please bring your student card.")
+    client.get("/logout")
+    login(client, "carlos")
+    with tracker.app.app_context():
+        row = tracker.get_db().execute(
+            "SELECT created_at, updated_at FROM requests WHERE id = ?", (request_id,)
+        ).fetchone()
+
+    page = client.get(f"/student/requests/{request_id}").get_data(as_text=True)
+    assert "In review" in page
+    assert "Please bring your student card." in page
+    assert row["created_at"] in page
+    assert row["updated_at"] in page
+    assert "No comment yet" not in page
+
+
+def test_fr3_ac2_request_detail_without_staff_comment_says_no_comment_yet(client):
+    request_id = submit_request(client, "carlos", "Study certificate", "For my bank account")
+    page = client.get(f"/student/requests/{request_id}").get_data(as_text=True)
+    assert "Study certificate" in page
+    assert "For my bank account" in page
+    assert "No comment yet" in page
+
+
+def test_fr3_ac3_another_students_request_returns_404(client):
+    carlos_id = student_id("carlos")
+    with tracker.app.app_context():
+        request_id = tracker.get_db().execute(
+            "SELECT id FROM requests WHERE student_id = ? ORDER BY id LIMIT 1", (carlos_id,)
+        ).fetchone()["id"]
+
+    login(client, "amina")
+    assert client.get(f"/student/requests/{request_id}").status_code == 404
+
+
+def test_fr3_ac3_missing_request_returns_404(client):
+    login(client, "carlos")
+    assert client.get("/student/requests/999999").status_code == 404

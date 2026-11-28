@@ -293,6 +293,17 @@ def new_request():
     return render_template("new_request.html", types=REQUEST_TYPES)
 
 
+@app.route("/student/requests/<int:request_id>")
+@login_required("student")
+def request_detail(request_id):
+    row = get_db().execute(
+        "SELECT * FROM requests WHERE id = ? AND student_id = ?", (request_id, session["user_id"])
+    ).fetchone()
+    if row is None:
+        abort(404)
+    return render_template("request_detail.html", r=row)
+
+
 # ---------- staff pages ----------
 
 @app.route("/staff")

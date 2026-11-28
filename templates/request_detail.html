@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Request details{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Request details</h1>
+    <p class="muted">{{ r.type }}</p>
+  </div>
+  <a class="btn btn-secondary" href="{{ url_for('student_home') }}">Back to my requests</a>
+</div>
+
+<section class="card">
+  <dl class="details">
+    <dt>Type</dt>
+    <dd>{{ r.type }}</dd>
+    <dt>Note</dt>
+    <dd>{{ r.note or '-' }}</dd>
+    <dt>Status</dt>
+    <dd>{{ status_pill(r.status) }}</dd>
+    <dt>Staff comment</dt>
+    <dd>{{ r.staff_comment or 'No comment yet' }}</dd>
+    <dt>Submitted</dt>
+    <dd>{{ r.created_at }}</dd>
+    <dt>Last updated</dt>
+    <dd>{{ r.updated_at }}</dd>
+  </dl>
+</section>
+{% endblock %}
